@@ -100,3 +100,58 @@ puts 0.1r * 3.0r == 0.3  # true
 if "" then puts '"" is true' end  # "" is true
 
 
+# 2.5.2 論理演算子
+
+# ||より&&の優先度の方が高い
+puts true || false && false  # true
+puts (true || false) && false  # true
+
+
+# 2.5.3 if文
+
+# if文に戻り値がある
+country = "italy"
+greeting = 
+  if country == "japan"
+    "こんにちは"
+  elsif country == "usa"
+    "Hello"
+  elsif country == "italy"
+    "Ciao"
+  end
+
+puts greeting  # Ciao
+
+# どの条件にも合致しない場合はnilを返す
+country = "brazil"
+greeting = 
+  if country == "japan"
+    "こんにちは"
+  elsif country == "usa"
+    "Hello"
+  elsif country == "italy"
+    "Ciao"
+  end
+
+puts greeting  # nil
+
+# if修飾子
+point = 7
+day = 1
+point *= 5 if day == 1  # 1日であればポイント5倍
+
+
+# 2.6.1 メソッドの戻り値
+def add(a, b)
+  # 最後に評価された式が戻り値となる
+  # returnを書いてもいいが、この書き方が一般的
+  a + b
+end
+
+
+# 2.6.2 引数のないメソッドは()を省略できる
+def greet
+  "こんにちは"
+end
+
+puts greet  # こんにちは
