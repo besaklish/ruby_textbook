@@ -26,3 +26,14 @@ puts "3.3.2 プログラム本体とテストコードを分離する"
 #     └── sample_test.rb
 
 # sample_test.rb内で、require_relative でコードを読み込む
+
+
+puts "Column: Minitest以外のテスティングフレームワーク"
+# RSpec
+# * 独自のDSL(ドメイン固有言語)でテストコードを書く
+# * 利用者が多く、日本語の情報も豊富
+# * 標準でインストールされていない
+
+# test-unit
+# * Minitestと互換性がある
+# * 標準でインストールされる
