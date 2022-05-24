@@ -540,3 +540,27 @@ catch :done do              # シンボルを指定
 end
 
 
+puts '4.11.4 next'
+# 次の繰り返し処理へ進む (pythonでのcontinue)
+numbers = [1, 2, 3]
+odd_numbers = []
+
+numbers.each do |n|
+  next if n.even?
+  odd_numbers << n
+end
+
+pp odd_numbers  # [1, 3]
+
+
+puts '4.14.5 redo'
+# 繰り返し処理を、その回の最初からやり直す
+# 無限ループに注意
+fruits = ['apple', 'melon', 'orange']
+fruits.each do |fruit|
+  puts "Do you like #{fruit}"
+  answer = ['yes', 'no'].sample
+  puts answer
+  redo unless answer == 'yes'
+end
+
