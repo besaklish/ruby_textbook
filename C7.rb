@@ -401,7 +401,7 @@ pp dvd.name  # "Belle"
 
 
 class DVD < Product  
-  # スーパークラスと全く同じ処理なら省略できる
+  # スーパークラスと全く同じ処理ならメソッドの定義を省略できる
   # def initialize(name, price)
   #   super
   # end
@@ -412,4 +412,480 @@ pp dvd.name  # "Belle"
 
 
 puts "7.6.6 メソッドのオーバーライド"
+
+# スーパークラスと同名のメソッドを作ることで処理を上書きできる
+class Product
+  attr_accessor :name, :price
+
+  def initialize(name, price)
+    @name  = name
+    @price = price
+  end
+
+  def to_s
+    "name: #{name}, price: #{price}"
+  end
+end
+
+class DVD < Product
+  attr_accessor :running_time
+
+  def initialize(name, price, running_time)
+    super(name, price)
+    @running_time = running_time
+  end
+
+  def to_s
+    "name: #{name}, price: #{price}, running_time: #{running_time}"
+  end 
+end
+
+product = Product.new "my_product", 100
+pp product.to_s   # "name: my_product, price: 100"
+
+dvd = DVD.new "my_dvd", 100, 1200
+pp dvd.to_s       # "name: my_dvd, price: 100, running_time: 1200"
+
+
+# Columnをスキップ
+# 引数名がつかない*, **
+
+
+puts "7.7 メソッドの可視性"
+
+puts "7.7.1 publicメソッド"
+# クラスの外部から呼び出せるメソッド
+# initializeメソッド以外のインスタンスメソッドはデフォルトでpublicメソッド
+class User
+  def hello
+    puts 'hello'
+  end
+end
+
+user = User.new
+user.hello  # hello
+
+
+puts "7.7.2 privateメソッド"
+# クラス内部のみで使えるメソッド
+# privateキーワード以下がprivateメソッドになる
+class User
+
+  private
+ 
+  def hello
+    puts 'hello'
+  end
+end
+
+user = User.new
+# user.hello  # C7.rb:482:in `<main>': private method `hello' called for #<User:0x0000000157852660> (NoMethodError)
+
+
+puts "7.7.3 privateメソッドから先に定義する場合"
+class User
+  private
+  def hello
+    puts 'hello'
+  end
+
+  public  # publicキーワードの下はpublicメソッドになる
+  def hi
+    puts 'hi'
+  end
+end
+
+
+puts "privateメソッドはサブクラスでも呼び出せる"
+# ただしスーパークラスとサブクラスで意図せず同名のメソッドを使ってしまうと、意図しない挙動になるので注意
+# サブクラスを書くときはスーパークラスの実装を理解してから (p.285 Columnに詳細あり)
+
+class Product
+  def initialize
+  end
+
+  private
+  def name           # nameはprivateメソッド
+    'a product'
+  end
+end
+
+class DVD < Product
+  def initialize
+  end
+
+  def to_s
+    "name: #{name}"  # nameメソッドをここで呼び出せる
+  end 
+end
+
+dvd = DVD.new
+pp dvd.to_s  # "name: a product"
+
+
+puts "7.7.5 クラスメソッドをprivateにしたい場合"
+# クラスメソッドはprivateキーワードの下に定義してもprivateにならない
+# クラスメソッドをprivateにするには以下の2つの方法がある
+# * class << self構文を使う
+# * private_class_method
+
+# * class << self構文を使う
+class User
+  class << self
+
+    private  # privateキーワードが使える
+    
+    def hello
+      puts 'hello'
+    end
+  end
+end
+
+user = User.new
+# user.hello  # private method `hello' called for #<User:0x00000001250d5dd8> (NoMethodError)
+
+
+# private_class_methodを使う
+class User
+  def self.hello
+    puts 'hello'
+  end
+
+  private_class_method :hello
+end
+
+user = User.new
+# user.hello  # private method `hello' called for #<User:0x000000012114a218> (NoMethodError)
+
+
+puts "7.7.6 メソッドの可視性を変えるあれこれ"
+# privateキーワードは実際にはシンボルを引数に取るメソッド
+class User
+  def hello
+    puts 'hello'
+  end
+
+  def hi
+    puts 'hi'
+  end
+
+  private :hello, :hi
+end
+
+# メソッド定義は式になっており、シンボルを返すことを利用して以下のように書ける
+class User
+  private def hello  # def hello ... end は :helloというシンボルを返している
+    puts 'hello'
+  end
+end
+
+
+# アクセサメソッドをprivateメソッドにする方法 (Ruby 3.0より前)
+class User
+  attr_accessor :name
+
+  private :name, :name=  # privateキーワードでゲッターメソッドとセッターメソッドをprivateにする
+
+  def initialize(name)
+    @name = name
+  end
+end
+
+# アクセサメソッドをprivateメソッドにする方法 (Ruby 3.0以降)
+class User
+  private attr_accessor :name  # attr_accessorキーワードにprivateをつける
+
+  def initialize(name)
+    @name = name
+  end
+end
+
+
+puts "7.7.7 protectedメソッド"
+
+# 外部には公開したくないが、同じクラス・サブクラスのレシーバ付きで呼び出せる
+class User
+  attr_reader :name
+
+  def initialize(name, weight)
+    @name   = name    # nameは公開しても良い
+    @weight = weight  # weightは公開したくない
+  end
+
+  def heavier_than?(other_user)
+    other_user.weight < @weight  # weightは公開したくないが、同じUserクラスのインスタンスであれば使ってもよいこととしたい
+  end
+
+  protected
+
+  def weight
+    @weight
+  end
+end
+
+alice = User.new "Alice", 50
+bob   = User.new "Bob"  , 60
+pp alice.heavier_than?(bob)  # false
+# pp alice.weight  # protected method `weight' called for #<User:0x000000013c0c3180 @name="Alice", @weight=50> (NoMethodError)
+
+
+puts "7.8 定数についてもっと詳しく"
+
+# 定数はクラス外から参照可能
+class Product
+  DEFAULT_PRICE = 100
+end
+
+pp Product::DEFAULT_PRICE  # 100
+
+
+# 定数をprivateにしたい場合: private_constant
+class Product
+  DEFAULT_PRICE = 100
+
+  private_constant :DEFAULT_PRICE
+end
+
+# pp Product::DEFAULT_PRICE  # private constant Product::DEFAULT_PRICE referenced (NameError)
+
+
+# 定数の定義はクラス構文の直下・トップレベルで行う
+# メソッド内では定数を定義できない
+class Foo
+  def foo
+    # BAR = 123  # C7.rb:655: dynamic constant assignment
+  end
+end
+
+
+# 配列を定数で定義しつつ、その要素も定数として定義できる
+# ※ Rubyの定数定義は式になっている
+# pp GREEN = 0  # => 0
+class TrafficLight
+  COLORS = [
+    GREEN  = 0,
+    YELLOW = 1,
+    RED    = 2
+  ]
+end
+
+pp TrafficLight::COLORS   # [0, 1, 2]
+pp TrafficLight::GREEN    # 0
+pp TrafficLight::YELLOW   # 1
+pp TrafficLight::RED      # 2
+
+
+puts "7.8.1 定数と再代入"
+
+# 定数は再代入が可能 (警告は出る)
+
+class Apple
+  DEFAULT_PRICE = 0
+  DEFAULT_PRICE = 1000
+end
+
+pp Apple::DEFAULT_PRICE
+
+
+# 再代入を防ぎたい場合はfreeze
+# freezeしない場合も多い
+# * 普通は定数を上書きする人はいないだろうから
+# * freezeしてしまうと、その後でメソッドの定義もできなくなるから
+class Apple
+  DEFAULT_PRICE = 0
+  freeze
+  # DEFAULT_PRICE = 1000  # can't modify frozen #<Class:Apple>: Apple (FrozenError)
+end
+
+pp Apple::DEFAULT_PRICE
+
+
+puts "7.8.2 定数はミュータブルなオブジェクトに注意する"
+# 文字列, Array, Hashなどのミュータブルなオブジェクトは、再代入しなくても値を変えられる
+# それを防ぐために、全てのミュータブルなオブジェクトをfreezeさせる方法がある
+class Product
+  NAMES = ['foo', 'bar', 'baz']
+end
+
+# 再代入なしで値を変更する
+Product::NAMES[0].upcase!
+pp Product::NAMES  # ["FOO", "bar", "baz"]
+
+# それを防ぐために全てfreezeする
+class Product
+  NAMES = ['foo'.freeze, 'bar'.freeze, 'baz'.freeze].freeze  # この方法か
+  NAMES = ['foo', 'bar', 'baz'].map(&:freeze).freeze         # この方法
+end
+
+# Product::NAMES[0].upcase!  # can't modify frozen String: "foo" (FrozenError)
+
+
+puts "7.9 様々な種類の変数"
+
+puts "7.9.1 クラスインスタンス変数"
+
+# インスタンス変数     : クラス.new でオブジェクトを生成した際に、オブジェクトごとに管理される変数
+# クラスインスタンス変数: クラス自身が保持しているデータ
+
+class Product
+  # クラスインスタンス変数
+  @name = 'Product'
+
+  def self.name
+    # クラスインスタンス変数
+    @name
+  end
+
+  def initialize(name)
+    # インスタンス変数
+    @name = name
+  end
+
+  def name
+    # インスタンス変数
+    @name
+  end
+end
+
+# クラスインスタンス変数は継承しない
+# インスタンス変数は、スーパークラスと同様のものが使える
+class DVD < Product
+  def initialize(...)
+    super(...)
+  end
+end
+
+product = Product.new 'my_product'
+pp Product.name  # "Product"
+
+dvd = DVD.new "my_dvd"
+pp DVD.name         # nil       (クラスインスタンス変数は継承しない)
+
+
+puts "7.9.2 クラス変数"
+# @@class_variable で定義
+
+# クラス構文の直下でもインスタンスメソッド内でも同一のクラス変数を参照可能
+# サブクラスも同名の変数が使える
+class Product
+  @@name = 'Product'      # サブクラスでも同名のクラス変数が使えるようになる
+
+  def self.name
+    @@name
+  end
+
+  def initialize(name)
+    @@name = name         # インスタンスメソッド内でも参照可能
+  end
+
+  def name
+    @@name
+  end
+end
+
+class DVD < Product
+  def self.name
+    @@name
+  end
+end
+
+
+pp Product.name  # "Product"
+pp DVD.name      # "Product"  (サブクラスからでもスーパークラスのクラス変数を参照可能)
+
+product = Product.new "my_product"  # 値を設定し直す
+pp product.name  # "my_product"
+pp Product.name  # "my_product"
+pp DVD.name      # "my_product"
+
+
+puts "7.9.3 グローバル変数と組み込み変数"
+
+# グローバル変数は$で始まる変数
+# どこからでも代入、参照が可能
+# 理解しづらいコードの原因となるので、理由がない限り使わない
+$program_name = 'Awesome program'
+
+class Program
+  def initialize(name)
+    $program_name = name  # グローバル変数に代入
+  end
+
+  def self.name
+    $program_name
+  end
+end
+
+pp Program.name  # "Awesome program"
+program = Program.new "New awesome program"
+pp Program.name  # "New awesome program"
+
+
+# $で始まるいくつの変数は「組み込み変数」「特殊変数」として最初から定義されている
+# 例: $stdin, $* ...
+
+
+puts "7.10 クラス定義やRubyの言語仕様に関する高度な話題"
+
+puts "7.10.1 エイリアスメソッド"
+class User
+  def initialize 
+  end
+
+  def hello
+    puts 'hello'
+  end
+
+  alias greet hello  # エイリアスの設定
+end
+
+user = User.new
+user.hello  # hello
+user.greet  # hello
+
+
+puts "7.10.3 入れ子になったクラスの定義"
+# クラスの内部にクラスを定義する
+# 参照方法: 外側のクラス::内側のクラス
+# クラス名の衝突を防ぐために使われることが多い
+class User
+  class BloodType
+    attr_reader :type
+
+    def initialize(type)
+      @type = type
+    end
+  end
+end
+
+blood_type = User::BloodType.new 'B'
+pp blood_type.type  # "B"
+
+
+puts "7.10.4 演算子の挙動を独自に再定義する"
+# 演算子の挙動はメソッドとして再定義できるものがある
+# 例: ==, |, &, <<, +@, -@,
+
+# 再定義できないものもある
+# 例: =, .., ..., not, &&, ||,
+
+class Product
+  attr_reader :code
+
+  def initialize(code)
+    @code = code
+  end
+
+  def ==(other)                                 # ==を再定義する
+    other.is_a?(Product) && code == other.code  # codeが一致していればtrueを返す
+  end
+end
+
+product_a      = Product.new 'a'
+product_a_dash = Product.new 'a'
+product_b      = Product.new 'b'
+
+pp product_a == product_a_dash # true
+pp product_a == product_b      # false
+
 
